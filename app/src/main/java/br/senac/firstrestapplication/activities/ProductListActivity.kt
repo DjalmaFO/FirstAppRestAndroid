@@ -2,11 +2,17 @@ package br.senac.firstrestapplication.activities
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import br.senac.firstrestapplication.R
 import br.senac.firstrestapplication.model.Product
+import br.senac.firstrestapplication.service.ProductAPI
 import kotlinx.android.synthetic.main.activity_product_list.*
 import kotlinx.android.synthetic.main.product_card_item.view.*
+import retrofit2.*
+import retrofit2.converter.gson.GsonConverterFactory
 import java.text.NumberFormat
+import kotlin.math.log
 
 class ProductListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,14 +20,54 @@ class ProductListActivity : AppCompatActivity() {
         setContentView(R.layout.activity_product_list)
     }
 
-    fun reloadList(products: List<Product>){
+    override fun onResume() {
+        super.onResume()
+        getProducts()
+    }
+    fun getProducts(){
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://oficinacordova.azurewebsites.net")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val apiProduct = retrofit.create(ProductAPI::class.java)
+
+        val call = apiProduct.list()
+
+        // Implementação do call back
+        val callBack = object: Callback<List<Product>>{
+            // Implementação da classe
+            override fun onFailure(call: Call<List<Product>>, t: Throwable) {
+                Toast.makeText(this@ProductListActivity, "Erro ao realizar a requisição", Toast.LENGTH_LONG).show()
+                Log.e("ProductListActivity", "getProducts", t)
+            }
+
+            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
+                if (response.isSuccessful){
+                    val products = response.body()
+                    reloadList(products)
+                }else{
+                    Toast.makeText(this@ProductListActivity, "Erro ao realizar a requisição", Toast.LENGTH_LONG).show()
+                    Log.e(response.code().toString(), response.errorBody().toString())
+                }
+            }
+
+        }
+
+        call.enqueue(callBack)
+    }
+
+    fun reloadList(products: List<Product>?){
         val formater = NumberFormat.getCurrencyInstance()
 
-        for (product in products){
-            val card = layoutInflater.inflate(R.layout.product_card_item, contProductsList, false)
-            card.tvNomeProductList.text = product.nomeProduto
-            card.tvPrecoProductList.text = formater.format(product.precoProduto)
-            contProductsList.addView(card)
+        products?.let {
+            for (product in it){
+                val card = layoutInflater.inflate(R.layout.product_card_item, contProductsList, false)
+                card.tvNomeProductList.text = product.nomeProduto
+                card.tvPrecoProductList.text = formater.format(product.precoProduto)
+                contProductsList.addView(card)
+            }
         }
+
     }
 }
