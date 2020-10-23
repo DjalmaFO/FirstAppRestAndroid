@@ -9,9 +9,11 @@ import br.senac.firstrestapplication.model.Product
 import br.senac.firstrestapplication.service.ProductAPI
 import kotlinx.android.synthetic.main.activity_product_list.*
 import kotlinx.android.synthetic.main.product_card_item.view.*
+import okhttp3.OkHttpClient
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.NumberFormat
+import java.util.concurrent.TimeUnit
 import kotlin.math.log
 
 class ProductListActivity : AppCompatActivity() {
@@ -25,9 +27,15 @@ class ProductListActivity : AppCompatActivity() {
         getProducts()
     }
     fun getProducts(){
+        val cliente = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+
         val retrofit = Retrofit.Builder()
             .baseUrl("https://oficinacordova.azurewebsites.net")
             .addConverterFactory(GsonConverterFactory.create())
+            .client(cliente)
             .build()
 
         val apiProduct = retrofit.create(ProductAPI::class.java)
