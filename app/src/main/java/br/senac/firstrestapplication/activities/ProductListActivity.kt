@@ -7,6 +7,7 @@ import android.widget.Toast
 import br.senac.firstrestapplication.R
 import br.senac.firstrestapplication.model.Product
 import br.senac.firstrestapplication.service.ProductAPI
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_product_list.*
 import kotlinx.android.synthetic.main.product_card_item.view.*
 import okhttp3.OkHttpClient
@@ -73,6 +74,13 @@ class ProductListActivity : AppCompatActivity() {
                 val card = layoutInflater.inflate(R.layout.product_card_item, contProductsList, false)
                 card.tvNomeProductList.text = product.nomeProduto
                 card.tvPrecoProductList.text = formater.format(product.precoProduto)
+                val url = "https://oficinacordova.azurewebsites.net/android/rest/produto/image/${product.idProduto}"
+                Picasso.get()
+                    .load(url)
+                    .placeholder(R.drawable.no_image)
+                    .error(R.drawable.no_image)
+                    .into(card.ivProductCardList)
+
                 contProductsList.addView(card)
             }
         }
